@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import metraStations from "../data/metraStations";
+import metraStations from "@/data/metraStations";
 
 const API_URL = "https://proxy.transithub.travel/gtfs/tripUpdates";
 
@@ -20,7 +20,7 @@ const MetraTracker = () => {
       if (!response.ok) throw new Error("Network response was not ok");
       const data = await response.json();
 
-      const now = Date.now();
+      const now = new Date();
 
       const filtered = data.entity
         .filter((entity) => {
@@ -30,15 +30,19 @@ const MetraTracker = () => {
         .map((entity) => {
           const trip = entity.trip_update;
           const stop = trip.stop_time_update.find((s) => s.stop_id === selectedStation);
-          const arrival = stop?.arrival?.time?.low || null;
+          const arrivalRaw = stop?.arrival?.time?.low;
+          const arrivalDate = arrivalRaw ? new Date(arrivalRaw) : null;
+
           return {
             train: trip.trip.trip_id,
-            arrivalTime: arrival ? new Date(arrival).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Unknown",
-            timestamp: arrival
+            arrivalTime: arrivalDate
+              ? arrivalDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : "Unknown",
+            timestamp: arrivalDate,
           };
         })
-        .filter((t) => t.timestamp && new Date(t.timestamp).getTime() > now)
-        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        .filter((t) => t.timestamp && t.timestamp > now)
+        .sort((a, b) => a.timestamp - b.timestamp);
 
       setArrivals(filtered);
     } catch (err) {
@@ -104,7 +108,9 @@ const MetraTracker = () => {
       {loading && <p>Loading arrivals...</p>}
 
       {!loading && !error && selectedStation && arrivals.length === 0 && (
-        <p className="text-gray-500">No upcoming arrivals found for this station.</p>
+        <p className="text-gray-500">
+          No upcoming arrivals found for this station.
+        </p>
       )}
 
       {error && <p className="text-red-500">{error}</p>}
