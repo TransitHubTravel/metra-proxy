@@ -1,32 +1,32 @@
-const express = require("express");
-const axios = require("axios");
-const cors = require("cors");
-
+// server.js
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
 const app = express();
+const PORT = process.env.PORT || 10000;
+
 app.use(cors());
 
-const PORT = process.env.PORT || 10000;
-const METRA_USERNAME = "62df027a36d2eb1474d6fe5123c83c5e";
-const METRA_PASSWORD = "11559938f5d0529542e0dea35357429c";
+const routes = {
+  '/positions': 'https://gtfsapi.metrarail.com/gtfs/positions',
+  '/tripUpdates': 'https://gtfsapi.metrarail.com/gtfs/tripUpdates',
+  '/alerts': 'https://gtfsapi.metrarail.com/gtfs/alerts',
+};
 
-app.get("/api/tripUpdates", async (req, res) => {
-  try {
-    const response = await axios.get(
-      "https://gtfsapi.metrarail.com/gtfs/tripUpdates",
-      {
+Object.entries(routes).forEach(([path, targetUrl]) => {
+  app.get(`/api${path}`, async (req, res) => {
+    try {
+      const response = await axios.get(targetUrl, {
         auth: {
-          username: METRA_USERNAME,
-          password: METRA_PASSWORD,
+          username: '62df027a36d2eb1474d6fe5123c83c5e',
+          password: '11559938f5d0529542e0dea35357429c',
         },
-        headers: {
-          "Accept": "application/json",
-        },
-      }
-    );
-    res.json(response.data);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch trip updates" });
-  }
+      });
+      res.json(response.data);
+    } catch (error) {
+      res.status(500).json({ error: 'Proxy failed', details: error.message });
+    }
+  });
 });
 
 app.listen(PORT, () => {
