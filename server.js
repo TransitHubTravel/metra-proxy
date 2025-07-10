@@ -1,5 +1,4 @@
 const express = require("express");
-const fetch = require("node-fetch");
 const cors = require("cors");
 
 const app = express();
@@ -61,4 +60,5 @@ app.get("/gtfs/raw/:file", async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ Metra proxy server running on port ${PORT}`);
+  console.log("==> Available at https://proxy.transithub.travel");
 });
